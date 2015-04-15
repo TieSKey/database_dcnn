@@ -11,14 +11,15 @@ feature_layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3', 'pool2', 'pool1']
 img_dir = "../images/imagenet"
 feature_dir = "../features"
 compression_dir = "../compression"
-caffe_root = '/home/eric/caffe/caffe-master/'
-
+caffe_root = '/media/Data/TigerShark/Master/ML/FP/caffe/'
+flann_indexes_dir = '../data/flann_indexes/'
+lsh_planes_dir = '../data/lsh_planes/'
 
 # database configuration
-user = 'USER_NAME'
-password = 'YOUR_PASS'
+user = 'postgres'
+password = 'zx10'
 host = '127.0.0.1'
-dbname = 'mydb'
+dbname = 'ml'
 
 
 def get_dimension_options(layer, compression):
@@ -215,3 +216,32 @@ def load_scalar(layer):
             scalar = hkl.load(os.path.join(features_path, file), safe=False)
 
     return scalar
+
+
+def load_test_set(layer, algorithm, dimensions):
+    """
+    Dummy implementation
+    :return:
+    """
+    imagenet_ids = np.load('../data/test_set/dummy_ids.npy')
+    features = np.load('../data/test_set/dummy_features.npy')
+
+    return imagenet_ids, features
+
+
+def get_features(imageFileName, layer, algorithm, dimensions):
+    """
+    Dummy implementation. Take an image url and return extracted features
+    :param imageFileName:
+    :return:
+    """
+    return None
+
+
+# cache labels for easy look up
+# can't be called in the top, must be bellow the function definition
+labels = load_val_class_labels()
+
+
+def get_label(imagenet_id):
+    return labels[imagenet_id]
