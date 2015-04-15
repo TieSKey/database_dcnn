@@ -21,11 +21,13 @@ sudo pip install psycopg2
 
 sudo pip install scikit-learn
 
+sudo pip install lshash==0.0.4dev
 
 --------------------------------------------
 functions using python
 
-1. sudo apt-get install postgresql-contrib postgresql-plpython
+1. sudo apt-get install postgresql-contrib postgresql-plpython postgresql-server-dev-9.4
 
 2. use dnn.sql to implement functions
 
+3. Distance functions: http://pgsimilarity.projects.pgfoundry.org/ (Install, add config to postgresql.conf, create estension in server)
