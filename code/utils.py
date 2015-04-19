@@ -9,6 +9,7 @@ use_alexnet = True
 
 feature_layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3', 'pool2', 'pool1']
 img_dir = "../images/training_images"
+test_dir = "../images/imagenet"
 feature_dir = "../features"
 compression_dir = "../compression"
 caffe_root = '/media/Data/TigerShark/Master/ML/FP/caffe/'
@@ -71,9 +72,10 @@ def load_english_labels():
     return labels
 
 
-def load_val_class_labels():
+def load_test_class_labels():
     """
-    Return all the class labels for the validation set.
+    Return all the class labels for the test set. Note that we are using the validation images as the test set
+    since they come with labels
 
     :return: labels
     """
@@ -138,8 +140,18 @@ def load_compressor(layer, dimension, compression):
     return hkl.load(file_path, safe=False)
 
 
-# Simple generator for looping over an array in batches
 def batch_gen(data, batch_size):
+    """
+    Simple generator for looping over an array in batches
+
+    :type data: array-like
+    :param data:
+
+    :type batch_size: int
+    :param batch_size:
+
+    :return: generator
+    """
     for i in range(0, len(data), batch_size):
         yield data[i:i + batch_size]
 
@@ -236,30 +248,26 @@ def load_scalar(layer):
     return scalar
 
 
-def load_test_set(layer, algorithm, dimensions):
+def generate_test_set(n=1000):
     """
-    Dummy implementation
+    Store the pointers to the files to be used in the test set.
+
+    :param n: The number of files from the validation set to use as the test set.
     :return:
     """
-    imagenet_ids = np.load('../data/test_set/dummy_ids.npy')
-    features = np.load('../data/test_set/dummy_features.npy')
+    import random
 
-    return imagenet_ids, features
+    image_files = os.listdir(test_dir)
+    N = len(image_files)
+    random.shuffle(image_files)
+    image_files = image_files[:n]
 
+    hkl.dump(image_files, "../images/test_set.hkl", mode='w')
 
-def get_features(imageFileName, layer, algorithm, dimensions):
+def load_test_set():
     """
-    Dummy implementation. Take an image url and return extracted features
-    :param imageFileName:
+    Returns a list of files to images
+
     :return:
     """
-    return None
-
-
-# cache labels for easy look up
-# can't be called in the top, must be bellow the function definition
-labels = load_val_class_labels()
-
-
-def get_label(imagenet_id):
-    return labels[imagenet_id]
+    return hkl.load("../images/test_set.hkl", safe=False)
