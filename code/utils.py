@@ -23,7 +23,6 @@ password = 'zx10'
 host = '127.0.0.1'
 dbname = 'ml'
 
-
 def get_dimension_options(layer, compression):
     """
     Returns an array of all the possible compression sizes for that layer / compression pair
@@ -350,7 +349,7 @@ def load_test_set():
 
     :return:
     """
-    return hkl.load(os.path.join(img_dir, "test_set.hkl"), safe=False)
+    return hkl.load("../images/test_set.hkl", safe=False)
 
 def load_distance_matrix(layer):
     """
