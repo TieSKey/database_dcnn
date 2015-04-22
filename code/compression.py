@@ -45,7 +45,7 @@ def generate_lsh_compression(X, layer, n_bits=64):
     :param n_bits:
     :return:
     """
-    import lsh_indexer as li
+    import lsh_compressor as li
 
     return li.generateHashes(X, str(layer) + "_" + str(n_bits), n_bits), None
 

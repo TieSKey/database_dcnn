@@ -12,9 +12,15 @@ if __name__ == '__main__':
 
     compression_type = 'pca'
 
+<<<<<<< Updated upstream
     feature_layers = utils.feature_layers
     # feature_layers = ['fc7']
     dimensions = [32,64,128,256,512]
+=======
+    # feature_layers = utils.feature_layers
+    feature_layers = ['fc7']
+    dimensions = [256]
+>>>>>>> Stashed changes
     ipca_batch_size = 1000
 
 

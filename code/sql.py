@@ -90,15 +90,20 @@ def query_top_k(k, features, compression, layer, dimension):
 
     :return:
     """
-    if dimension != features.size:
-        raise ValueError('Feature size did not match dimension of query requested.')
+    # if dimension != features.size:
+    # raise ValueError('Feature size did not match dimension of query requested.')
 
     conn = psycopg2.connect(dbname=utils.dbname, user=utils.user, password=utils.password, host=utils.host)
     cur = conn.cursor()
 
-    sql_command = "SELECT file, class, distance2(%s," + create_feature_name(
+    sql_command = "SELECT file, class, hamming( '" + features + "' ," + create_feature_name(
         dimension) + ") as D FROM " + create_table_name(compression, layer) + " ORDER BY D ASC LIMIT " + str(k)
+<<<<<<< Updated upstream
     cur.execute(sql_command, [features.tolist()])
+=======
+    # print sql_command
+    cur.execute(sql_command)
+>>>>>>> Stashed changes
 
     results = cur.fetchall()
 

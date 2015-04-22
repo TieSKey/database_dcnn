@@ -1,8 +1,10 @@
 import caffe
-import numpy as np
 import os
 import time
+
+import numpy as np
 import hickle as hkl
+from lsh_compressor import LSHCompressor
 
 
 use_alexnet = True
@@ -155,6 +157,9 @@ def load_compressor(layer, dimension, compression):
 
     :return: Compression algorithm
     """
+    if compression == "lsh":
+        return LSHCompressor(dimension, 'randomPlanes'+str(dimension))
+
     if not layer in feature_layers:
         raise NotImplementedError('Feature Layer Type Not Found.')
 
@@ -209,9 +214,6 @@ def load_network():
 
     print 'Blobs : ', blobs
     print 'Params : ', params
-
-    net.set_phase_test()
-    net.set_mode_gpu()
 
     return net, params, blobs
 
@@ -350,6 +352,7 @@ def load_test_set():
     :return:
     """
     return hkl.load("../images/test_set.hkl", safe=False)
+
 
 def load_distance_matrix(layer):
     """

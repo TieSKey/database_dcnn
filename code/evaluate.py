@@ -9,14 +9,14 @@ import hickle as hkl
 # Script Params
 # ------------------------------------------------
 
-compression_types = ['pca']
+compression_types = ['lsh']
 
 distance_matrix_layer = 'pool5'
 
 # feature_layers = utils.feature_layers
-feature_layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3']
-dimensions = [32,64,128,256,512]
-# dimensions = [512]
+feature_layers = ['fc7']
+# dimensions = [32,64,128,256,512]
+dimensions = [512]
 
 # top k items to be retrieved and measured
 k = 5
@@ -84,7 +84,7 @@ for c_type in compression_types:
                     feat = net.blobs[layer].data[i].ravel()
                     feat = scalar.transform(feat)
 
-                    comp_feat = compressor.transform(feat).ravel()
+                    comp_feat = compressor.transform(feat)
 
                     # run the top k query and time it
                     st = time.time()
