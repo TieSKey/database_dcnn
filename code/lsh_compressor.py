@@ -43,11 +43,11 @@ def generateHashes(X, scalar, planesFileName, n_bits=64):
 
     # overwrite old matrixes an build some random new ones
     fileName = os.path.join(utils.lsh_planes_dir, planesFileName + '.npz')
-    lsh = LSHash(n_bits, np.shape(X[0])[0], matrices_filename=fileName, overwrite=True)
+    lsh = LSHash(n_bits, np.shape(X[0])[0], matrices_filename=fileName, overwrite=False)
     hashValues = []
     for input_point in X:
         input_point = scalar.transform(input_point)
-        hashValues.append(lsh._hash(lsh.uniform_planes[0], input_point.tolist()))
+        hashValues.append(lsh._hash(lsh.uniform_planes[0], input_point))
 
     return hashValues
 
@@ -116,7 +116,7 @@ def storeHashesInDb(ids, labels, hashes, tableName, nBits):
     insertStr = "INSERT INTO " + tableName + " (file, class, " + columnName + ") VALUES (%s, %s, %s)"
 
     for idx, hash in enumerate(hashes):
-        if columnExists:
+        if tableExists:
             sqlCommand = cur.mogrify(updateStr, (hash, ids[idx]))
         else:
             sqlCommand = cur.mogrify(insertStr, (ids[idx], str(labels[ids[idx]]), hash))
@@ -148,14 +148,17 @@ def test():
 if __name__ == '__main__':
     import utils
 
-    nBits = 512
+    nBits = 1024
 
-    scalar = utils.load_scalar(layer='pool5')
-    # generatePlanesWithBias('randomPlanes512', nBits, 4096, 0)
+    scalar = utils.load_scalar(layer='fc7')
+
+    fileName = os.path.join(utils.lsh_planes_dir, 'randomPlanes' + str(nBits))
+    var = np.mean(scalar.std_)
+    generatePlanesWithBias(fileName, nBits, 4096, var)
 
     # trueIds, testSet = utils.load_test_set('fc7', 'raw', 0)
-    dataset, ids = utils.load_feature_layer('pool5')
+    dataset, ids = utils.load_feature_layer('fc7')
     labels = utils.load_train_class_labels()
 
     hashes = generateHashes(dataset, scalar, 'randomPlanes' + str(nBits), nBits)
-    storeHashesInDb(ids, labels, hashes, 'lsh_pool5', nBits)
+    storeHashesInDb(ids, labels, hashes, 'lsh_fc7', nBits)

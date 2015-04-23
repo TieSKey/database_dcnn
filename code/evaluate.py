@@ -1,3 +1,4 @@
+import collections
 import sql
 import utils
 import os, time
@@ -11,12 +12,12 @@ import hickle as hkl
 
 compression_types = ['lsh']
 
-distance_matrix_layer = 'pool5'
+distance_matrix_layer = 'fc7'
 
 # feature_layers = utils.feature_layers
 feature_layers = ['fc7']
 # dimensions = [32,64,128,256,512]
-dimensions = [512]
+dimensions = [128]
 
 # top k items to be retrieved and measured
 k = 5
@@ -41,6 +42,11 @@ labels = utils.load_english_labels()
 
 dist_mat = utils.load_distance_matrix(distance_matrix_layer)
 
+dbObj = sql.KQuery()
+
+succs = 0  # how many times we retrieved at least 1 image of the true class
+hits = 0  # how many images of the true class we retrieved in total
+
 # initialize results data object
 results = {}
 for c_type in compression_types:
@@ -62,14 +68,6 @@ for c_type in compression_types:
             count = 0
             for t_files in utils.batch_gen(test_files, batch_size=batch_size):
 
-                if count % 50 == 0:
-                    similarity_dist = results[c_type][layer][n_components]['similarity_dist']
-                    avg_time = results[c_type][layer][n_components]['avg_time']
-                    print 'Evaluate Script :: C Type : ', c_type, ' // Layer : ', layer, ' // Dim : ', n_components, ' // Count : ', count
-                    print 'Evaluate Script :: Similarity Distance : ', similarity_dist / (
-                    count + 1e-7), ' // Avg Time : ', avg_time / (count + 1e-7)
-
-                count += 1 * batch_size
 
                 images = []
                 for t_file in t_files:
@@ -85,14 +83,17 @@ for c_type in compression_types:
                     feat = scalar.transform(feat)
 
                     comp_feat = compressor.transform(feat)
+                    if isinstance(comp_feat, np.ndarray):
+                        comp_feat = comp_feat.ravel()
 
                     # run the top k query and time it
                     st = time.time()
-                    query_results = sql.query_top_k(k=k,
-                                                    features=comp_feat,
-                                                    compression=c_type,
-                                                    layer=layer,
-                                                    dimension=n_components)
+                    query_results = dbObj.query_top_k(k=k,
+                                                      features=comp_feat,
+                                                      compression=c_type,
+                                                      layer=layer,
+                                                      dimension=n_components,
+                                                      distance='hamming')
 
                     et = time.time()
 
@@ -102,12 +103,30 @@ for c_type in compression_types:
                     best_case = 0
 
                     class_distance = 0
+                    last_hits = hits
                     for x in query_results:
                         class_distance += dist_mat[t_class, x[1]]
+                        if t_class == x[1]:
+                            hits += 1
+
+                    if last_hits < hits:
+                        succs += 1
+
                     avg_dist = class_distance / len(query_results)
 
-                    results[c_type][layer][n_components]['similarity_dist'] += (worst_case - avg_dist) / (worst_case - best_case)
+                    results[c_type][layer][n_components]['similarity_dist'] += (worst_case - avg_dist) / (
+                        worst_case - best_case)
                     results[c_type][layer][n_components]['avg_time'] += et - st
+
+                count += 1 * batch_size
+
+                if count % 50 == 0:
+                    similarity_dist = results[c_type][layer][n_components]['similarity_dist']
+                    avg_time = results[c_type][layer][n_components]['avg_time']
+                    print 'Evaluate Script :: C Type : ', c_type, ' // Layer : ', layer, ' // Dim : ', n_components, ' // Count : ', count
+                    print 'Evaluate Script :: Similarity Distance : ', similarity_dist / (
+                        count + 1e-7), ' // Avg Time : ', avg_time / (count + 1e-7)
+                    print "'Evaluate Script :: Success: " + str(succs) + " Hits: " + str(hits)
 
             results[c_type][layer][n_components]['similarity_dist'] /= len(test_files)
             results[c_type][layer][n_components]['avg_time'] /= len(test_files)

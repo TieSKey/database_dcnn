@@ -1,6 +1,30 @@
 import psycopg2
 import time
 import utils
+import numpy as np
+
+
+class KQuery(object):
+    def __init__(self):
+        self.conn = psycopg2.connect(dbname=utils.dbname, user=utils.user, password=utils.password, host=utils.host)
+        self.cur = self.conn.cursor()
+
+
+    def query_top_k(self, k, features, compression, layer, dimension, distance):
+
+        if distance == 'distance2':
+            sql_command = "SELECT file, class, distance2( %s ," + create_feature_name(
+                dimension) + ") as D FROM " + create_table_name(compression, layer) + " ORDER BY D ASC LIMIT " + str(k)
+        elif distance == 'hamming':
+            sql_command = "SELECT file, class, hamming( %s ," + create_feature_name(
+                dimension) + ") as D FROM " + create_table_name(compression, layer) + " ORDER BY D ASC LIMIT " + str(k)
+
+        if isinstance(features, np.ndarray):
+            self.cur.execute(sql_command, [features.tolist()])
+        else:
+            self.cur.execute(sql_command, (features,))
+
+        return self.cur.fetchall()
 
 
 def store_feature(layers, compression):
@@ -96,14 +120,13 @@ def query_top_k(k, features, compression, layer, dimension):
     conn = psycopg2.connect(dbname=utils.dbname, user=utils.user, password=utils.password, host=utils.host)
     cur = conn.cursor()
 
-    sql_command = "SELECT file, class, hamming( '" + features + "' ," + create_feature_name(
+    sql_command = "SELECT file, class, hamming( %s ," + create_feature_name(
+        # sql_command = "SELECT file, class, distance2( %s ," + create_feature_name(
         dimension) + ") as D FROM " + create_table_name(compression, layer) + " ORDER BY D ASC LIMIT " + str(k)
-<<<<<<< Updated upstream
-    cur.execute(sql_command, [features.tolist()])
-=======
+
     # print sql_command
-    cur.execute(sql_command)
->>>>>>> Stashed changes
+    # cur.execute(sql_command, [features.tolist()])
+    cur.execute(sql_command, (features,))
 
     results = cur.fetchall()
 
@@ -126,7 +149,7 @@ def create_feature_name(dim):
 
 
 if __name__ == '__main__':
-    layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3']
+    layers = ['pool5']
     compression = 'pca'
     store_feature(layers, compression)
 
