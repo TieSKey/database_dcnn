@@ -148,11 +148,11 @@ def test():
 if __name__ == '__main__':
     import utils
 
-    nBits = 1024
+    nBits = 4096
 
     scalar = utils.load_scalar(layer='fc7')
 
-    fileName = os.path.join(utils.lsh_planes_dir, 'randomPlanes' + str(nBits))
+    fileName = os.path.join(utils.lsh_planes_dir, 'randomPlanesBias' + str(nBits))
     var = np.mean(scalar.std_)
     generatePlanesWithBias(fileName, nBits, 4096, var)
 
@@ -160,5 +160,5 @@ if __name__ == '__main__':
     dataset, ids = utils.load_feature_layer('fc7')
     labels = utils.load_train_class_labels()
 
-    hashes = generateHashes(dataset, scalar, 'randomPlanes' + str(nBits), nBits)
+    hashes = generateHashes(dataset, scalar, 'randomPlanesBias' + str(nBits), nBits)
     storeHashesInDb(ids, labels, hashes, 'lsh_fc7', nBits)

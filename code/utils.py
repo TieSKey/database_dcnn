@@ -165,6 +165,8 @@ def load_compressor(layer, dimension, compression):
     """
     if compression == "lsh":
         return LSHCompressor(dimension, 'randomPlanes' + str(dimension))
+    elif compression == "lshbias":
+        return LSHCompressor(dimension, 'randomPlanesBias' + str(dimension))
 
     if not layer in feature_layers:
         raise NotImplementedError('Feature Layer Type Not Found.')
@@ -210,7 +212,8 @@ def load_network():
         PRETRAINED = '../caffe/bvlc_alexnet/bvlc_alexnet.caffemodel'
 
     net = caffe.Classifier(MODEL_FILE, PRETRAINED,
-                           mean=np.load(os.path.join(caffe_root, 'python/caffe/imagenet/ilsvrc_2012_mean.npy')),
+                           mean=np.load(os.path.join(caffe_root, 'python/caffe/imagenet/ilsvrc_2012_mean.npy')).mean(
+                               1).mean(1),
                            channel_swap=(2, 1, 0),
                            raw_scale=255,
                            image_dims=(256, 256))

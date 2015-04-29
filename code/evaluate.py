@@ -8,7 +8,6 @@ import numpy as np
 # Script Params
 # ------------------------------------------------
 
-
 compression_types = ['lsh']
 
 distance_matrix_layer = 'fc7'
@@ -17,7 +16,7 @@ distance_matrix_layer = 'fc7'
 
 feature_layers = ['fc7']
 # dimensions = [32,64,128,256,512]
-dimensions = [128]
+dimensions = [4096]
 
 
 # top k items to be retrieved and measured
@@ -45,8 +44,6 @@ dist_mat = utils.load_distance_matrix(distance_matrix_layer)
 
 dbObj = sql.KQuery()
 
-succs = 0  # how many times we retrieved at least 1 image of the true class
-hits = 0  # how many images of the true class we retrieved in total
 
 
 # initialize results data object
@@ -60,9 +57,13 @@ for c_type in compression_types:
 
 for c_type in compression_types:
     for layer in feature_layers:
+
         scalar = utils.load_scalar(layer=layer)
 
         for n_components in dimensions:
+            succs = 0  # how many times we retrieved at least 1 image of the true class
+            hits = 0  # how many images of the true class we retrieved in total
+
             compressor = utils.load_compressor(layer=layer,
                                                dimension=n_components,
                                                compression=c_type)
@@ -120,9 +121,9 @@ for c_type in compression_types:
                         worst_case - best_case)
                     results[c_type][layer][n_components]['avg_time'] += et - st
 
-                count += 1 * batch_size
+                count += batch_size
 
-                if count % 50 == 0:
+                if count % 500 == 0:
                     similarity_dist = results[c_type][layer][n_components]['similarity_dist']
                     avg_time = results[c_type][layer][n_components]['avg_time']
                     print 'Evaluate Script :: C Type : ', c_type, ' // Layer : ', layer, ' // Dim : ', n_components, ' // Count : ', count
@@ -134,3 +135,4 @@ for c_type in compression_types:
             results[c_type][layer][n_components]['avg_time'] /= len(test_files)
 
     utils.dump_results(results, c_type, distance_matrix_layer)
+
