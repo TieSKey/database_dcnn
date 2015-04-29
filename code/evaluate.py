@@ -16,7 +16,7 @@ distance_matrix_layer = 'fc7'
 
 feature_layers = ['fc7']
 # dimensions = [32,64,128,256,512]
-dimensions = [4096]
+dimensions = [512]
 
 
 # top k items to be retrieved and measured
@@ -91,6 +91,7 @@ for c_type in compression_types:
 
                     # run the top k query and time it
                     st = time.time()
+
                     query_results = dbObj.query_top_k(k=k,
                                                       features=comp_feat,
                                                       compression=c_type,
@@ -115,24 +116,27 @@ for c_type in compression_types:
                     if last_hits < hits:
                         succs += 1
 
-                    avg_dist = class_distance / len(query_results)
+                    if len(query_results) == 0:
+                        avg_dist = 0
+                    else:
+                        avg_dist = class_distance / len(query_results)
 
-                    results[c_type][layer][n_components]['similarity_dist'] += (worst_case - avg_dist) / (
-                        worst_case - best_case)
-                    results[c_type][layer][n_components]['avg_time'] += et - st
+                    results[c_type][layer][n_components]['similarity_dist'].append(
+                        (worst_case - avg_dist) / (worst_case - best_case))
+                    results[c_type][layer][n_components]['avg_time'].append(et - st)
 
                 count += batch_size
 
                 if count % 500 == 0:
-                    similarity_dist = results[c_type][layer][n_components]['similarity_dist']
-                    avg_time = results[c_type][layer][n_components]['avg_time']
+                    mean_dist = np.mean(results[c_type][layer][n_components]['similarity_dist'])
+                    mean_time = np.mean(results[c_type][layer][n_components]['avg_time'])
                     print 'Evaluate Script :: C Type : ', c_type, ' // Layer : ', layer, ' // Dim : ', n_components, ' // Count : ', count
-                    print 'Evaluate Script :: Similarity Distance : ', similarity_dist / (
-                        count + 1e-7), ' // Avg Time : ', avg_time / (count + 1e-7)
+                    print 'Evaluate Script :: Similarity Distance : ', mean_dist, ' // Avg Time : ', mean_time
                     print "'Evaluate Script :: Success: " + str(succs) + " Hits: " + str(hits)
 
-            results[c_type][layer][n_components]['similarity_dist'] /= len(test_files)
-            results[c_type][layer][n_components]['avg_time'] /= len(test_files)
+            results[c_type][layer][n_components]['similarity_dist'].append(
+                (worst_case - avg_dist) / (worst_case - best_case))
+            results[c_type][layer][n_components]['avg_time'].append(et - st)
 
     utils.dump_results(results, c_type, distance_matrix_layer)
 
