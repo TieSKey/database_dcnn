@@ -5,6 +5,7 @@ import time
 import numpy as np
 import hickle as hkl
 from lsh_compressor import LSHCompressor
+from lsh_indexer import LSHIndex
 
 
 use_alexnet = True
@@ -167,6 +168,8 @@ def load_compressor(layer, dimension, compression):
         return LSHCompressor(dimension, 'randomPlanes' + str(dimension))
     elif compression == "lshbias":
         return LSHCompressor(dimension, 'randomPlanesBias' + str(dimension))
+    elif compression == "lshidx":
+        return LSHIndex()
 
     if not layer in feature_layers:
         raise NotImplementedError('Feature Layer Type Not Found.')
@@ -447,6 +450,30 @@ def plot_compression_times(compression_type, dist_type, title):
     plt.legend(bbox_to_anchor=(1., 1), loc=2, borderaxespad=0., prop={'size': 20})
 
     plt.show()
+
+
+def generate_test_set(n=1000):
+    """
+    Store the pointers to the files to be used in the test set.
+    :param n: The number of files from the validation set to use as the test set.
+    :return:
+    """
+    import random
+
+    image_files = os.listdir(test_dir)
+    N = len(image_files)
+    random.shuffle(image_files)
+    image_files = image_files[:n]
+
+    hkl.dump(image_files, os.path.join(img_dir, "test_set.hkl"), mode='w')
+
+
+def load_test_set():
+    """
+    Returns a list of files to images
+    :return:
+    """
+    return hkl.load("../images/test_set.hkl", safe=False)
 
 
 def load_distance_matrix(layer):
