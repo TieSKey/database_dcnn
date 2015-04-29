@@ -1,5 +1,9 @@
 /images/ILSVRC2012_devkit_t12/*
 /images/imagenet/*
+/images/training_images/*
+
+/Parametric t-SNE/*
+/features/**/*.hkl
 
 /.idea
 /code/.idea
@@ -15,4 +19,3 @@
 *.caffemodel
 *.npy
 *.JPEG
-

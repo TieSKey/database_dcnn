@@ -12,17 +12,11 @@ if __name__ == '__main__':
 
     compression_type = 'pca'
 
-<<<<<<< Updated upstream
     feature_layers = utils.feature_layers
-    # feature_layers = ['fc7']
-    dimensions = [32,64,128,256,512]
-=======
-    # feature_layers = utils.feature_layers
     feature_layers = ['fc7']
     dimensions = [256]
->>>>>>> Stashed changes
-    ipca_batch_size = 1000
 
+    ipca_batch_size = 1000
 
     for layer in feature_layers:
         X, ids = utils.load_feature_layer(layer)
@@ -44,10 +38,9 @@ if __name__ == '__main__':
             print 'Compression time : ', (time.clock() - start_time)
             print 'Compression time per sample : ', (time.clock() - start_time) / X.shape[0]
 
-
             print 'X - Prime Shape', X_prime.shape
 
-            utils.dump_compressor(layer,pca,compression_type,n_components)
+            utils.dump_compressor(layer, pca, compression_type, n_components)
 
 
 

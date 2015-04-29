@@ -1,23 +1,24 @@
-import collections
 import sql
 import utils
 import os, time
 import caffe
 import numpy as np
-import hickle as hkl
 
 # ------------------------------------------------
 # Script Params
 # ------------------------------------------------
+
 
 compression_types = ['lsh']
 
 distance_matrix_layer = 'fc7'
 
 # feature_layers = utils.feature_layers
+
 feature_layers = ['fc7']
 # dimensions = [32,64,128,256,512]
 dimensions = [128]
+
 
 # top k items to be retrieved and measured
 k = 5
@@ -47,6 +48,7 @@ dbObj = sql.KQuery()
 succs = 0  # how many times we retrieved at least 1 image of the true class
 hits = 0  # how many images of the true class we retrieved in total
 
+
 # initialize results data object
 results = {}
 for c_type in compression_types:
@@ -54,7 +56,7 @@ for c_type in compression_types:
     for layer in feature_layers:
         results[c_type][layer] = {}
         for n_components in dimensions:
-            results[c_type][layer][n_components] = {'similarity_dist': 0, 'avg_time': 0}
+            results[c_type][layer][n_components] = {'similarity_dist': [], 'avg_time': []}
 
 for c_type in compression_types:
     for layer in feature_layers:
@@ -131,4 +133,4 @@ for c_type in compression_types:
             results[c_type][layer][n_components]['similarity_dist'] /= len(test_files)
             results[c_type][layer][n_components]['avg_time'] /= len(test_files)
 
-hkl.dump(results, 'results_pca.hkl')
+    utils.dump_results(results, c_type, distance_matrix_layer)

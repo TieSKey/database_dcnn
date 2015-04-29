@@ -1,22 +1,29 @@
-import sql
+import sql_tsne
 import utils
 import os
 import numpy as np
 import caffe
+import matlab.engine
 
+# start matlab engine
+eng = matlab.engine.start_matlab()
 
-# image_file = 'ILSVRC2012_val_00025381.JPEG'
-image_file = 'ILSVRC2012_val_00015447.JPEG'
-layer = 'fc7'
-dimension = 32
-compression = 'pca'
-k = 5
+#image_file = 'ILSVRC2012_val_00045381.JPEG'
+
+image_file = 'ILSVRC2012_val_00025381.JPEG'
+#image_file = 'ILSVRC2012_val_00015447.JPEG'
+layer = 'pool5'
+dimension = 256
+compression = 'tsne'
+tsne_dim = 5
+
+k = 40
 
 dist_mat = utils.load_distance_matrix('pool5')
 
 compressor = utils.load_compressor(layer=layer,
                                    dimension=dimension,
-                                   compression=compression)
+                                   compression='pca')
 
 scalar = utils.load_scalar(layer=layer)
 
@@ -31,7 +38,19 @@ feat = scalar.transform(feat)
 
 comp_feat = compressor.transform(feat).ravel()
 
-results = sql.query_top_k(k=k,
+
+
+# for tsne
+comp_feat = comp_feat.tolist()
+
+comp_feat = matlab.double(comp_feat)
+comp_feat = eng.tsne_testing_python(comp_feat, tsne_dim, layer, dimension, 'pca')
+
+comp_feat = np.array(comp_feat)
+comp_feat= comp_feat.ravel()
+print comp_feat
+
+results = sql_tsne.query_top_k(k=k,
                           features=comp_feat,
                           compression=compression,
                           layer=layer,
@@ -58,15 +77,17 @@ print 'Percent Of Optimal : ', (worst_case - avg_dist) / (worst_case - best_case
 
 print 'Query class : ', test_class, labels[test_class]
 for x in results:
-    print x[0], ' Class : ', x[1], labels[x[1]], ' Distance : ', x[2]
+    print x[0], ' Class : ', x[1], labels[x[1]],  ' Distance : ', x[2]
 
 
-    # import matplotlib.pyplot as plt
-    #
-    # plt.imshow(input_image)
-    # plt.plot()
-    #
-    # image_file = results[0][0]
-    # image = caffe.io.load_image(os.path.join(utils.img_dir, image_file))
-    # plt.imshow(image)
-    # plt.plot()
+eng.exit()
+
+# import matplotlib.pyplot as plt
+#
+# plt.imshow(input_image)
+# plt.plot()
+#
+# image_file = results[0][0]
+# image = caffe.io.load_image(os.path.join(utils.img_dir, image_file))
+# plt.imshow(image)
+# plt.plot()
